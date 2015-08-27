@@ -47,3 +47,35 @@ Indexes:
     "test_table_pkey" PRIMARY KEY, btree (row_id)
 
 test=# 
+
+var express = require('express');
+var router = express.Router();
+var pg = require('pg');
+var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/test';
+
+/* GET home page. */
+router.post('/api/v1/test', function(req, res, next) {
+  var results = [];
+  var data = {text: req.body.text, complete: false};
+  pg.connect(connectionString, function(err,client,done){
+                                    
+	//this seems wrong 
+	var qry = client.query("INSERT INTO test_table(data) values($1)",[data.text]);
+	qry.on('row', function(row, results) {
+		results.rows.push(row)
+	});
+	qry.on('end', function(results) {
+		var whatIGotBack = results.rows;
+		console.log(whatIGotBack);
+
+
+		client.end();
+	});
+	qry.on('error', function(err) {
+		console.log(err);
+		client.end();
+	});
+ 
+  //client.end();	
+  res.render('index', { title: 'Express' });
+});
